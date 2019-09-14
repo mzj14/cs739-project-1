@@ -10,6 +10,6 @@ CS739 Project 1
 
 ### Simple Test
 ```
-curl -d "k=100" -X GET http://localhost:8000/kv/
-curl -d '{"k":"100", "v":"999"}' -H "Content-Type: application/json" -X POST http://localhost:8000/kv/
+curl -X GET http://128.105.144.129:80/kv/?k=100
+curl -d '{"k":"100", "v":"999"}' -H "Content-Type: application/json" -X POST http://128.105.144.129:80/kv/
 ```
