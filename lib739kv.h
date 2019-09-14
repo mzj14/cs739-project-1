@@ -1,6 +1,14 @@
 #ifndef LIB739KV_H
 #define LIB739KV_H
-
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <memory>
+#include <regex>
+#include <cpprest/http_client.h>
+#include <cpprest/filestream.h>
+#include <cpprest/containerstream.h>
 
 #include <cpprest/http_client.h>
 
