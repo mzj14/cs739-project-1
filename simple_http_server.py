@@ -9,19 +9,36 @@ import requests
 
 class RequestHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
+    '''
     def __init__(self):
         super().__init__()
         # start the recover process
         rec = False
-        latest_t = next(db2.iterator())[1].split("[")[0]
+        # get the latest timestamp in db
+        latest_t = next(db2.iterator(reverse=True))[0].split("[")[0]
         while (not rec):
             for port in server_ports:
                 if port != server_port:
                     r = requests.get(url='http://%s:%s/rec/?t=%s'%(server_ip, port, latest_t))
                     if r.status_code == 200:
-                        sync = True
-                        print(r.json())
+                        rec = True
+                        # write to db
+                        for tk, v in r.json():
+                            t, k = tk.split("[")
+                            old_t = db3.get(k.encode())
+                            replace = (not old_t) or (old_t.decode() < t)
+                            # TODO: atomic write ?
+                            if replace:
+                                # delete old timestamp
+                                if old_t:
+                                    db2.delete((old_t.decode() + "[" + k).encode())
+                                db2.put((t + "[" + k).encode(), v.encode())
+                                # instert timestamp
+                                db3.put(k.encode(), t.encode())
+                                # record key-value
+                                db1.put(k.encode(), v.encode())
                         break
+    '''
 
     def do_GET(self):
         parsed_path = urlparse(self.path)
@@ -60,8 +77,13 @@ class RequestHandler(BaseHTTPRequestHandler):
             # print("post value is = ", data['v'])
             t = str(datetime.datetime.now())
             k, v = data['k'], data['v']
-            # record timestamp
-            db2.put((t + "[" + k).encode(), k.encode())
+            old_t = db3.get(k.encode())
+            # delete old timestamp
+            if old_t:
+                db2.delete((old_t.decode() + "[" + k).encode())
+            db2.put((t + "[" + k).encode(), v.encode())
+            # instert timestamp
+            db3.put(k.encode(), t.encode())
             # record key-value
             old_v = db1.get(k.encode())
             db1.put(k.encode(), v.encode())
@@ -86,8 +108,12 @@ class RequestHandler(BaseHTTPRequestHandler):
             # print("post value is = ", data['v'])
             # print("post timestamp is = ", data['t'])
             k, v, t = data['k'], data['v'], data['t']
+            old_t = db3.get(k.encode())
+            if old_t:
+                db2.delete((old_t.decode() + "[" + k).encode())
             # record timestamp
-            db2.put((t + "[" + k).encode(), k.encode())
+            db2.put((t + "[" + k).encode(), v.encode())
+            db3.put(k.encode(), t.encode())
             # record key-value
             db1.put(k.encode(), v.encode())
             message = json.dumps({})
@@ -97,14 +123,16 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(message.encode())
 
-    return
-
 if __name__ == '__main__':
     server_ip, server_ports, server_index = sys.argv[1], sys.argv[2].split(','), int(sys.argv[3])
     server_port = server_ports[server_index]
     # reconnect to the database
+    # key->value
     db1 = plyvel.DB('/tmp/cs739db-%s-1/' % server_port, create_if_missing=True)
+    # timestampe+key->value
     db2 = plyvel.DB('/tmp/cs739db-%s-2/' % server_port, create_if_missing=True)
+    # key->timestamp
+    db3 = plyvel.DB('/tmp/cs739db-%s-3/' % server_port, create_if_missing=True)
     server = HTTPServer((server_ip, int(server_port)), RequestHandler)
     print('Starting server at http://%s:%s' % (server_ip, server_port))
     server.serve_forever()
