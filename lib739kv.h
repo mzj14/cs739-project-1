@@ -56,6 +56,7 @@ int kv739_put(char * key, char * value, char * old_value)
 	json_post["k"] = web::json::value::string(key);
 	json_post["v"] = web::json::value::string(value);
 	// send request
+	cout << json_post.serialize() << endl;
 	client_ptr->request(methods::POST, builder.to_string(), json_post)
 		.then([](const web::http::http_response& response) {
         		return response.extract_json(); 
@@ -76,26 +77,28 @@ int kv739_put(char * key, char * value, char * old_value)
 
 int kv739_get(char * key, char * value)
 {
+	cout << "GET value for key = " << key << endl;
 	concurrency::streams::stringstreambuf buffer;
 	web::json::value json_return;
 	// build request
-	uri_builder builder(U("/kv/?k="));
-    builder.append_query(U(key));
-    client_ptr->request(methods::GET, builder.to_string())    
-    .then([](const web::http::http_response& response) {
-        return response.extract_json(); 
-    })
-    .then([&json_return](const pplx::task<web::json::value>& task) {
-        try {
-            json_return = task.get();
-        }
-        catch (const web::http::http_exception& e) {                    
-            std::cout << "error " << e.what() << std::endl;
-        }
-    })
-    .wait();
-    // TODO: parse json to get value
-    std::cout << json_return.serialize() << std::endl;
+	uri_builder builder(U("/kv/"));
+	builder.append_query(U("k"), U(key));
+	cout << "query key: " << builder.to_string() << endl;
+    	client_ptr->request(methods::GET, builder.to_string())    
+    	.then([](const web::http::http_response& response) {
+        	return response.extract_json(); 
+    	})
+    	.then([&json_return](const pplx::task<web::json::value>& task) {
+        	try {
+            		json_return = task.get();
+        	}
+        	catch (const web::http::http_exception& e) {                    
+            		std::cout << "error " << e.what() << std::endl;
+       		}
+    	})
+    	.wait();
+    	// TODO: parse json to get value
+    	std::cout << json_return.serialize() << std::endl;
 	return 0;
 }
 
