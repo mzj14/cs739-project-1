@@ -97,7 +97,9 @@ int kv739_get(char * key, char * value)
        		}
     	})
     	.wait();
-    	// TODO: parse json to get value
+    	// parse json to get value
+	//json::value  v = json::value::parse(U("value"));
+	
     	std::cout << json_return.serialize() << std::endl;
 	return 0;
 }
