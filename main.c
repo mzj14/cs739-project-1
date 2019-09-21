@@ -1,15 +1,17 @@
-#include <iostream>
-#include "lib739kv.h"
-
-using namespace std;
+#include <stdio.h>
+#include "739kv.h"
 
 int main(int argc, char * argv[])
 {
 	char* server_list[3];
+	const size_t length = sizeof(server_list)/sizeof(char*);
+	printf("length = %lu\n", length);
+	
 	server_list[0] = argv[1];
 	server_list[1] = argv[2];
 	server_list[2] = argv[3];
-	kv739_init(server_list);
+	// server_list[3] = ;
+	kv739_init(server_list, length);
 	
 	char key[] = {'1', '0', '0', '\0'};
 	char value[100];

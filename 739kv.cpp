@@ -14,6 +14,8 @@ using namespace web;
 using namespace web::http;
 using namespace web::http::client;
 
+#include "739kv.h"
+
 string const INFO = "[INFO] ";
 string const ERROR = "[ERROR] ";
 string const WARN = "[WARNING] ";
@@ -23,17 +25,17 @@ static int NUM_SERVER = 0;
 const int MAX_NUM_SERVER = 16;
 web::http::client::http_client* client_ptrs[MAX_NUM_SERVER];
 
-
-int kv739_init(char ** server_list)
+int kv739_init(char ** server_list, size_t length)
 {
 	// go through server list
 	size_t i = 0;
 	// init all servers with name host:post
-	while (server_list[i] != NULL) {
+	while (i < length) {
 		cout << INFO << "try to initialize server " << i << endl;
 		// extract host & port
 		vector<char*> v;
 		char* chars_array = strtok(server_list[i], ":");
+		cout << DEBUG << "server list i: " << server_list[i] << endl;
 		while(chars_array)
     		{
         		v.push_back(chars_array);
