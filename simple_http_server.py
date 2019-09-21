@@ -9,6 +9,19 @@ import requests
 
 class RequestHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
+    def __init__(self):
+        super().__init__()
+        # start the recover process
+        rec = False
+        latest_t = next(db2.iterator())[1].split("[")[0]
+        while (not rec):
+            for port in server_ports:
+                if port != server_port:
+                    r = requests.get(url='http://%s:%s/rec/?t=%s'%(server_ip, port, latest_t))
+                    if r.status_code == 200:
+                        sync = True
+                        print(r.json())
+                        break
 
     def do_GET(self):
         parsed_path = urlparse(self.path)
@@ -18,6 +31,18 @@ class RequestHandler(BaseHTTPRequestHandler):
             v = db1.get(k.encode())
             s = {"is_key_in": "yes", "value": v.decode()} if v else {"is_key_in": "no", "value": "None"}
             message = json.dumps(s)
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header("Content-Length", len(message))
+            self.end_headers()
+            self.wfile.write(message.encode())
+        # data recover from failure
+        if parsed_path.path == "/rec/":
+            t = parsed_path.query.split("=")[-1]
+            dic = {}
+            for k, v in db2.iterator(start=t.encode()):
+                dic[k.decode()] = v.decode()
+            message = json.dumps(dic)
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header("Content-Length", len(message))
@@ -36,7 +61,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             t = str(datetime.datetime.now())
             k, v = data['k'], data['v']
             # record timestamp
-            db2.put((t + k).encode(), k.encode())
+            db2.put((t + "[" + k).encode(), k.encode())
             # record key-value
             old_v = db1.get(k.encode())
             db1.put(k.encode(), v.encode())
@@ -62,7 +87,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             # print("post timestamp is = ", data['t'])
             k, v, t = data['k'], data['v'], data['t']
             # record timestamp
-            db2.put((t + k).encode(), k.encode())
+            db2.put((t + "[" + k).encode(), k.encode())
             # record key-value
             db1.put(k.encode(), v.encode())
             message = json.dumps({})
@@ -71,7 +96,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", len(message))
             self.end_headers()
             self.wfile.write(message.encode())
-        return
+
+    return
 
 if __name__ == '__main__':
     server_ip, server_ports, server_index = sys.argv[1], sys.argv[2].split(','), int(sys.argv[3])
