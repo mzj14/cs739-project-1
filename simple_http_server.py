@@ -137,8 +137,9 @@ def recover_db():
             else:
                 if r.status_code == 200:
                     # write to db
-                    for tk, v in r.json():
+                    for tk, v in r.json().items():
                         t, k = tk.split("[")[:2]
+                        print(t, k, v)
                         old_t = db3.get(k.encode())
                         if old_t and old_t.decode() < t:
                             continue
