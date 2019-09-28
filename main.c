@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "739kv.h"
+#include <unistd.h>
 
 int main(int argc, char * argv[])
 {
@@ -12,25 +13,28 @@ int main(int argc, char * argv[])
 	//server_list[2] = argv[3];
 	// server_list[3] = ;
 	// printf("argc = %d\n", argc);
-	kv739_init(server_list, 3);
+	kv739_init(server_list, 1);
 
 	// char key[] = {'1', '0', '0', '\0'};
 	char value[100] = {0};
 
-    for (int i = 0; i < 10; i++) {
-	    kv739_get("100", value);
-	}
+//    for (int i = 0; i < 10; i++) {
+//	    kv739_get("100", value);
+//1	}
 
 
-    /*
+    
+	char key[] = {'3', '0', '0', '\0'};
 	char new_val[] = {'7', '0', '0', '\0'};
 	char old_val[100];
 	kv739_put(key, new_val, old_val);
+        sleep(6);
 	kv739_get(key, value);
 
 	char new_key[] = {'3', '0', '1', '\0'};
 	kv739_put(new_key, new_val, old_val);
+        sleep(6);
 	kv739_get(new_key, value);
-	*/
+
 	return 0;
 }

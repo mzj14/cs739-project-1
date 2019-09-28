@@ -43,7 +43,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 v = None
             conn.commit()
 
-            s = {"is_key_in": "yes", "value": v.decode()} if v else {"is_key_in": "no", "value": "None"}
+            s = {"is_key_in": "yes", "value": v} if v else {"is_key_in": "no", "value": "None"}
             message = json.dumps(s)
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -88,7 +88,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             # print("post key is = ", data['k'])
             # print("post value is = ", data['v'])
             print("receive write request")
-            t = str(datetime.datetime.now())
+            t = str(datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
             k, v = data['k'], data['v']
 
             # old_t = db3.get(k.encode())
@@ -114,6 +114,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 c.execute('''UPDATE KVSTORE SET TIMESTAMP = %s, VALUE = %s WHERE KEY = %s AND TIMESTAMP <= %s;''' % (t, v, k, t))
             else:
                 old_v = None
+                print("debug: INSERT INTO KVSTORE VALUES (%s, %s, %s);" % (k, v, t))
                 c.execute('''INSERT INTO KVSTORE VALUES (%s, %s, %s);''' % (k, v, t))
             conn.commit()
 
@@ -128,7 +129,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     else:
                         if r.status_code != 200:
                             print("Wrong Status Code: process %s:%s not ready!" % (server_ip, port))
-            s = {"is_key_in": "yes", "old_value": old_v.decode()} if old_v else {"is_key_in": "no", "old_value": "None"}
+            s = {"is_key_in": "yes", "old_value": old_v} if old_v else {"is_key_in": "no", "old_value": "None"}
             message = json.dumps(s)
             self.send_response(200)
             self.send_header('Content-type', 'application/json')

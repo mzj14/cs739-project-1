@@ -14,7 +14,9 @@ all:
 	make main.o
 
 main.o: main.c
-	$(CXX) main.c -L. -l :lib739kv.so -o output
+	# export LD_LIBRARY_PATH=$(pwd)
+	echo $(LD_LIBRARY_PATH)
+	$(CXX) main.c -L./ -l 739kv -o output
 
 lib739kv.so: 739kv.h 739kv.cpp
 	rm -f *.so

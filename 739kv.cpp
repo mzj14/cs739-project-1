@@ -87,21 +87,17 @@ int kv739_put(char * key, char * value, char * old_value)
 		// choose server
 		client_ptr = client_ptrs[COUNTER];
 
-		client_ptr->request(methods::GET, builder.to_string())
-		.then([](const web::http::http_response& response) {
-	    	return response.extract_json();
-		})
-		.then([&json_return, &fail](const pplx::task<web::json::value>& task) {
-	    	try {
-	        		json_return = task.get();
-	        		fail = 0;
-	        		cout << INFO << "connection sucess!" << endl;
-	    	}
-	    	catch (const web::http::http_exception& e) {
-	        		cout << WARN << "fail to connect server " << COUNTER << " : " << e.what() << std::endl;
-	   		}
-		})
-		.wait();
+		try 
+		{
+			json_return = client_ptr->request(methods::POST, builder.to_string(), json_post).get().extract_json().get();
+			fail = 0;
+			cout << INFO << "connection sucess!" << endl;
+		}
+		catch (const web::http::http_exception& e)
+		{
+			cout << WARN << "fail to connect server " << COUNTER << " : " << e.what() << std::endl;
+		}
+		
 		increment_counter();
 		attempts++;
 	}
@@ -154,21 +150,34 @@ int kv739_get(char * key, char * value)
 		// choose server
 		client_ptr = client_ptrs[COUNTER];
 
-		client_ptr->request(methods::GET, builder.to_string())
-		.then([](const web::http::http_response& response) {
-	    	return response.extract_json();
-		})
-		.then([&json_return, &fail](const pplx::task<web::json::value>& task) {
-	    	try {
-	        		json_return = task.get();
-	        		fail = json_return.at("is_key_in").as_string() == "NA" ? 1 : 0;
-	        		cout << INFO << "connection sucess!" << endl;
-	    	}
-	    	catch (const web::http::http_exception& e) {
-	        		cout << WARN << "fail to connect server " << COUNTER << " : " << e.what() << std::endl;
-	   		}
-		})
-		.wait();
+		// client_ptr->request(methods::GET, builder.to_string())
+		// .then([](const web::http::http_response& response) {
+	 //    	return response.extract_json();
+		// })
+		// .then([&json_return, &fail](const pplx::task<web::json::value>& task) {
+	 //    	try {
+	 //        		json_return = task.get();
+	 //        		fail = json_return.at("is_key_in").as_string() == "NA" ? 1 : 0;
+	 //        		cout << INFO << "connection sucess!" << endl;
+	 //    	}
+	 //    	catch (const web::http::http_exception& e) {
+	 //        		cout << WARN << "fail to connect server " << COUNTER << " : " << e.what() << std::endl;
+	 //   		}
+		// })
+		// .wait();
+		try 
+		{
+			json_return = client_ptr->request(methods::GET, 
+				builder.to_string()).get().extract_json().get();
+			fail = 0;
+			cout << INFO << "connection sucess!" << endl;
+		}
+		catch (const web::http::http_exception& e)
+		{
+			cout << WARN << "fail to connect server " << COUNTER << " : " << e.what() << std::endl;
+		}
+
+
 		increment_counter();
 		attempts++;
 	}
