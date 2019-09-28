@@ -25,10 +25,10 @@ static int NUM_SERVER = 0;
 const int MAX_NUM_SERVER = 16;
 web::http::client::http_client* client_ptrs[MAX_NUM_SERVER];
 
-int kv739_init(char ** server_list, size_t length)
+int kv739_init(char ** server_list, int length)
 {
 	// go through server list
-	size_t i = 0;
+	int i = 0;
 	// init all servers with name host:post
 	while (i < length) {
 		cout << INFO << "try to initialize server " << i << endl;
@@ -40,7 +40,7 @@ int kv739_init(char ** server_list, size_t length)
     		{
         		v.push_back(chars_array);
         		chars_array = strtok(NULL, ":");
-    		}	
+    		}
 		//client_ptr = new http_client(U("http://google.com"));
 		uri_builder builder(U("http://"));
 		builder.set_host(v[0]);
@@ -53,26 +53,10 @@ int kv739_init(char ** server_list, size_t length)
 	}
 	return 0;
 }
-/*
-int kv739_shutdown(void)
-{
-	// TODO: close connection and release resources
-	size_t i = 0;
-	while (i < NUM_SERVER)
-	{
-		//TODO: shut down client
-		client_ptrs[i] = null;
-	}
-	// reset NUM_SERVER
-	NUM_SERVER = 0;
-	return 0;
-}
-*/
+
 void increment_counter()
 {
-	COUNTER++;
-	if (COUNTER > NUM_SERVER-1)
-		COUNTER = 0;
+	COUNTER = (COUNTER + 1) % NUM_SERVER;
 }
 
 
@@ -103,9 +87,9 @@ int kv739_put(char * key, char * value, char * old_value)
 		// choose server
 		client_ptr = client_ptrs[COUNTER];
 
-		client_ptr->request(methods::GET, builder.to_string())    
+		client_ptr->request(methods::GET, builder.to_string())
 		.then([](const web::http::http_response& response) {
-	    	return response.extract_json(); 
+	    	return response.extract_json();
 		})
 		.then([&json_return, &fail](const pplx::task<web::json::value>& task) {
 	    	try {
@@ -113,7 +97,7 @@ int kv739_put(char * key, char * value, char * old_value)
 	        		fail = 0;
 	        		cout << INFO << "connection sucess!" << endl;
 	    	}
-	    	catch (const web::http::http_exception& e) {                    
+	    	catch (const web::http::http_exception& e) {
 	        		cout << WARN << "fail to connect server " << COUNTER << " : " << e.what() << std::endl;
 	   		}
 		})
@@ -122,12 +106,9 @@ int kv739_put(char * key, char * value, char * old_value)
 		attempts++;
 	}
 
-	if (fail)
-		return -1;
-
     cout << DEBUG << json_return.serialize() << endl;
-	
-	// check if key is in 
+
+	// check if key is in
 	utility::string_t is_key_in = json_return.at("is_key_in").as_string();
 	if (is_key_in == "yes")
 	{
@@ -137,12 +118,14 @@ int kv739_put(char * key, char * value, char * old_value)
 	    	copy(val.begin(), val.end(), old_value);
 		old_value[val.size()] = '\0';
 		cout << INFO << "return value = " << val << endl;
+		return 0;
 	}
 	else
 	{
 		cout << INFO << "no old value" << endl;
+		return 1;
 	}
-	return 0;
+	return -1;
 }
 
 int kv739_get(char * key, char * value)
@@ -160,7 +143,7 @@ int kv739_get(char * key, char * value)
 	web::http::client::http_client* client_ptr;
 	int fail = 1;
 	int attempts = 0;
-	
+
 	while (fail)
 	{
 		cout << DEBUG << "attempt " << attempts << ": try to connect server " << COUNTER << endl;
@@ -171,17 +154,17 @@ int kv739_get(char * key, char * value)
 		// choose server
 		client_ptr = client_ptrs[COUNTER];
 
-		client_ptr->request(methods::GET, builder.to_string())    
+		client_ptr->request(methods::GET, builder.to_string())
 		.then([](const web::http::http_response& response) {
-	    	return response.extract_json(); 
+	    	return response.extract_json();
 		})
 		.then([&json_return, &fail](const pplx::task<web::json::value>& task) {
 	    	try {
 	        		json_return = task.get();
-	        		fail = 0;
+	        		fail = json_return.at("is_key_in").as_string() == "NA" ? 1 : 0;
 	        		cout << INFO << "connection sucess!" << endl;
 	    	}
-	    	catch (const web::http::http_exception& e) {                    
+	    	catch (const web::http::http_exception& e) {
 	        		cout << WARN << "fail to connect server " << COUNTER << " : " << e.what() << std::endl;
 	   		}
 		})
@@ -190,27 +173,25 @@ int kv739_get(char * key, char * value)
 		attempts++;
 	}
 
-	if (fail)
-		return -1;
-	
 	cout << DEBUG << json_return.serialize() << endl;
 
-	// check if key is in 
+	// check if key is in
 	utility::string_t is_key_in = json_return.at("is_key_in").as_string();
 	if (is_key_in == "yes")
 	{
     	// parse json to get value
 		json::value json_val = json_return.at(U("value"));
 		utility::string_t val = json_val.as_string();
-	    	copy(val.begin(), val.end(), value);
+	    copy(val.begin(), val.end(), value);
 		value[val.size()] = '\0';
 		cout << INFO << "return value = " << val << endl;
+		return 0;
 	}
 	else
 	{
 		cout << WARN << "key is not found" << endl;
+		return 1;
 	}
 
-	return 0;
+	return -1;
 }
-

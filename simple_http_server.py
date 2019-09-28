@@ -16,8 +16,8 @@ class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         # the database is still under recover
         if not rec:
-            message = json.dumps({})
-            self.send_response(400)
+            message = json.dumps({"is_key_in": "NA"})
+            self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header("Content-Length", len(message))
             self.end_headers()
