@@ -14,18 +14,19 @@ class RequestHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
     def do_GET(self):
-        # the database is still under recover
-        if not rec:
-            message = json.dumps({"is_key_in": "NA"})
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.send_header("Content-Length", len(message))
-            self.end_headers()
-            self.wfile.write(message.encode())
-            return
+
         parsed_path = urlparse(self.path)
         # handle read request
         if parsed_path.path == "/kv/":
+            # the database is still under recover
+            if not rec:
+                message = json.dumps({"is_key_in": "NA"})
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header("Content-Length", len(message))
+                self.end_headers()
+                self.wfile.write(message.encode())
+                return
             # print('key is = ', parsed_path.query.split("=")[-1])
             print("receive read request")
             k = parsed_path.query.split("=")[-1]
@@ -41,6 +42,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         # data recover from failure
         if parsed_path.path == "/rec/":
             print("receive recover request")
+            if not rec:
+                message = json.dumps({})
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.send_header("Content-Length", len(message))
+                self.end_headers()
+                self.wfile.write(message.encode())
+                return
             t = parsed_path.query.split("=")[-1]
             dic = {}
             for k, v in db2.iterator(start=t.encode()):
@@ -65,6 +74,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             print("receive write request")
             t = str(datetime.datetime.now())
             k, v = data['k'], data['v']
+            print("k = ", k)
             old_t = db3.get(k.encode())
             if old_t:
                 # delete old timestamp
@@ -79,17 +89,17 @@ class RequestHandler(BaseHTTPRequestHandler):
             db1.put(k.encode(), v.encode())
             # launch http request to sync data for other servers
             # even if a server crashes, we will still try to sync with it
+            print("finish db op")
             for port in server_ports:
                 if port != server_port:
                     try:
-                        r = requests.post(url = 'http://%s:%s/sync/' % (server_ip, port), json = {"k": k, "v": v, "t": t})
-                    except requests.ConnectionError:
+                        r = requests.post(url = 'http://%s:%s/sync/' % (server_ip, port), json = {"k": k, "v": v, "t": t}, timeout=3)
+                    except (requests.ConnectionError, requests.Timeout):
                         print("Sync Timeout: process %s:%s dead!" % (server_ip, port))
-                    else:
-                        if r.status_code != 200:
-                            print("Wrong Status Code: process %s:%s not ready!" % (server_ip, port))
+            print("set write json message")
             s = {"is_key_in": "yes", "old_value": old_v.decode()} if old_v else {"is_key_in": "no", "old_value": "None"}
             message = json.dumps(s)
+            print("message = ", message)
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header("Content-Length", len(message))
