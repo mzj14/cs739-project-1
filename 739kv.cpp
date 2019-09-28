@@ -53,7 +53,7 @@ int kv739_init(char ** server_list, size_t length)
 	}
 	return 0;
 }
-
+/*
 int kv739_shutdown(void)
 {
 	// TODO: close connection and release resources
@@ -67,7 +67,7 @@ int kv739_shutdown(void)
 	NUM_SERVER = 0;
 	return 0;
 }
-
+*/
 void increment_counter()
 {
 	COUNTER++;
