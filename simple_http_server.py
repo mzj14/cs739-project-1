@@ -246,10 +246,10 @@ if __name__ == '__main__':
     conn = sqlite3.connect('cs739db-%s-1.db' % server_port)
     cursor = conn.cursor()
     # create table with schema (key, value, timestamp)
-    cursor.execute('''CREATE TABLE KVSTORE ( KEY TEXT PRIMARY KEY NOT NULL, VALUE TEXT NOT NULL, TIMESTAMP BIGINT NOT NULL);''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS KVSTORE ( KEY TEXT PRIMARY KEY NOT NULL, VALUE TEXT NOT NULL, TIMESTAMP BIGINT NOT NULL);''')
     # create indexes for time and key
-    cursor.execute('''CREATE INDEX idx_timestamp ON KVSTORE(TIMESTAMP);''')
-    cursor.execute('''CREATE INDEX idx_key ON KVSTORE(KEY);''')
+    cursor.execute('''CREATE INDEX IF NOT EXISTS idx_key ON KVSTORE(KEY);''')
+    cursor.execute('''CREATE INDEX IF NOT EXISTS idx_timestamp ON KVSTORE(TIMESTAMP);''')
     conn.commit()
 
     # set recover flag
