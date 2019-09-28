@@ -243,7 +243,7 @@ if __name__ == '__main__':
     # # key->timestamp
     # db3 = plyvel.DB('/tmp/cs739db-%s-3/' % server_port, create_if_missing=True)
 
-    conn = sqlite3.connect('/tmp/cs739db-%s-1/' % server_port)
+    conn = sqlite3.connect('cs739db-%s-1.db' % server_port)
     cursor = conn.cursor()
     # create table with schema (key, value, timestamp)
     cursor.execute('''CREATE TABLE KVSTORE ( KEY TEXT PRIMARY KEY NOT NULL, VALUE TEXT NOT NULL, TIMESTAMP BIGINT NOT NULL);''')
