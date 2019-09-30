@@ -51,14 +51,12 @@ int kv739_init(char ** server_list, int length)
     return 0;
 }
 
-int kv739_shutdown()
-{
+int kv739_shutdown() {
     int i = NUM_SERVER - 1;
-    while (i >= 0) 
-    {
-	server_addrs[i] = "";
-	NUM_SERVER--;
-	i--;
+    while (i >= 0) {
+        server_addrs[i] = "";
+        NUM_SERVER--;
+        i--;
     }
     return 0;
 }
