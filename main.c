@@ -2,6 +2,7 @@
 #include <time.h>
 
 #include "739kv.h"
+#include <unistd.h>
 
 int main(int argc, char * argv[])
 {
@@ -16,6 +17,7 @@ int main(int argc, char * argv[])
 	//server_list[2] = argv[3];
 	// server_list[3] = ;
 	// printf("argc = %d\n", argc);
+
 	kv739_init(server_list, 2);
 
 	char get_value[100] = {0};
@@ -44,15 +46,18 @@ int main(int argc, char * argv[])
 	delta = t1 - t0;
     printf("Latency: %f ms for write request.\n", delta / 1000.0 / 1e6);
 
-    /*
+    
+	char key[] = {'3', '0', '0', '\0'};
 	char new_val[] = {'7', '0', '0', '\0'};
 	char old_val[100];
 	kv739_put(key, new_val, old_val);
+        sleep(6);
 	kv739_get(key, value);
 
 	char new_key[] = {'3', '0', '1', '\0'};
 	kv739_put(new_key, new_val, old_val);
+        sleep(6);
 	kv739_get(new_key, value);
-	*/
+
 	return 0;
 }

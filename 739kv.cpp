@@ -59,6 +59,7 @@ void increment_counter()
 
 int kv739_put(char * key, char * value, char * old_value)
 {
+
     cout << "\n\n" << INFO << "try to put value " << value << " into key " << key << endl;
     concurrency::streams::stringstreambuf buffer;
 
@@ -114,6 +115,7 @@ int kv739_put(char * key, char * value, char * old_value)
 
 int kv739_get(char * key, char * value)
 {
+
     cout << "\n\n" << INFO << "try to get value for key = " << key << endl;
     concurrency::streams::stringstreambuf buffer;
     web::json::value json_return;
@@ -166,4 +168,5 @@ int kv739_get(char * key, char * value)
     }
 
     return -1;
+
 }
