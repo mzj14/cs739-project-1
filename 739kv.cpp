@@ -57,6 +57,16 @@ void increment_counter()
 }
 
 
+int kv739_shutdown() {
+    int i = NUM_SERVER - 1;
+    while (i >= 0) {
+        server_addrs[i] = "";
+        NUM_SERVER--;
+	    i--;
+    }
+    return 0;
+}
+
 int kv739_put(char * key, char * value, char * old_value)
 {
     // cout << "\n\n" << INFO << "try to put value " << value << " into key " << key << endl;
