@@ -50,6 +50,7 @@ int main(int argc, char * argv[])
 	char key[] = {'3', '0', '0', '\0'};
 	char new_val[] = {'7', '0', '0', '\0'};
 	char old_val[100];
+	char value[100];
 	kv739_put(key, new_val, old_val);
         sleep(6);
 	kv739_get(key, value);

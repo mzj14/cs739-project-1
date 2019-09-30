@@ -10,6 +10,7 @@ import requests
 import threading
 
 rec = False
+db_name = None
 
 class RequestHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
@@ -34,6 +35,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             # v = db1.get(k.encode())
 
             # get value for key = k
+            conn = sqlite3.connect(db_name)
             c = conn.cursor()
             # grab old value
             c.execute('''SELECT VALUE FROM KVSTORE WHERE KEY = %s''' % k)
@@ -67,6 +69,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             t = parsed_path.query.split("=")[-1]
 
             # grab all the k, v pairs with timestamp >= t
+            conn = sqlite3.connect(db_name)
             c = conn.cursor()
             # grab old value
             c.execute('''SELECT KEY, VALUE, TIMESTAMP FROM KVSTORE WHERE TIMESTAMP >= %s''' % t)
@@ -114,6 +117,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             # db1.put(k.encode(), v.encode())
 
             # put v into k if old_t < t
+            conn = sqlite3.connect(db_name)
             c = conn.cursor()
             # grab old value
             c.execute(''' SELECT VALUE FROM KVSTORE INDEXED BY idx_key WHERE KEY = %s; ''' % k)
@@ -167,6 +171,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             # db1.put(k.encode(), v.encode())
 
             # put v into k if old_t < t
+            conn = sqlite3.connect(db_name)
             c = conn.cursor()
             # grab old value
             c.execute(''' SELECT VALUE FROM KVSTORE INDEXED BY idx_key WHERE KEY = %s; ''' % k)
@@ -191,11 +196,11 @@ def recover_db():
     print("start db recover process...")
     # start the recover process
     # get the latest timestamp in db
-
+    conn = sqlite3.connect(db_name)
     c = conn.cursor()
     c.execute(''' SELECT MAX(TIMESTAMP) FROM KVSTORE INDEXED BY idx_timestamp; ''')
     return_val = c.fetchone()
-    c.commit()
+    conn.commit()
     if return_val:
         latest_t = return_val[0]
     else:
@@ -228,6 +233,7 @@ def recover_db():
 
 
                     # put v into k if old_t < t
+                    conn = sqlite3.connect(db_name)
                     c = conn.cursor()
                     # grab old value
                     c.execute(''' SELECT VALUE FROM KVSTORE INDEXED BY idx_key WHERE KEY = %s; ''' % k)
@@ -247,6 +253,7 @@ def recover_db():
 
 
 if __name__ == '__main__':
+    global server_port
     server_ip, server_ports, server_index = sys.argv[1], sys.argv[2].split(','), int(sys.argv[3])
     server_port = server_ports[server_index]
 
@@ -257,8 +264,9 @@ if __name__ == '__main__':
     # db2 = plyvel.DB('/tmp/cs739db-%s-2/' % server_port, create_if_missing=True)
     # # key->timestamp
     # db3 = plyvel.DB('/tmp/cs739db-%s-3/' % server_port, create_if_missing=True)
-
-    conn = sqlite3.connect('cs739db-%s-1.db' % server_port)
+    db_name = 'cs739db-%s.db' % server_port
+    conn = sqlite3.connect(db_name)
+    #conn = sqlite3.connect('cs739db-%s.db' % server_port)
     cursor = conn.cursor()
     # create table with schema (key, value, timestamp)
     cursor.execute('''CREATE TABLE IF NOT EXISTS KVSTORE ( KEY TEXT PRIMARY KEY NOT NULL, VALUE TEXT NOT NULL, TIMESTAMP BIGINT NOT NULL);''')
