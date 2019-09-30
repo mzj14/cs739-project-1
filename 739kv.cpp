@@ -25,12 +25,12 @@ static int NUM_SERVER = 0;
 const int MAX_NUM_SERVER = 16;
 string server_addrs[MAX_NUM_SERVER];
 
-int kv739_init(char ** server_list, int length)
+int kv739_init(char** server_list)
 {
     // go through server list
     int i = 0;
     // init all servers with name host:post
-    while (i < length) {
+    while (server_list[i]) {
         cout << INFO << "try to initialize server " << i << endl;
         // extract host & port
         vector<char*> v;
@@ -50,17 +50,6 @@ int kv739_init(char ** server_list, int length)
     }
     return 0;
 }
-
-int kv739_shutdown() {
-    int i = NUM_SERVER - 1;
-    while (i >= 0) {
-        server_addrs[i] = "";
-        NUM_SERVER--;
-        i--;
-    }
-    return 0;
-}
-
 
 void increment_counter()
 {
