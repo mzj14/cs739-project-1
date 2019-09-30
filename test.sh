@@ -1,3 +1,5 @@
+export LD_LIBRARY_PATH=$(pwd)
+echo $LD_LIBRARY_PATH
 ip=$(curl ifconfig.me)
 echo "${ip}"
 for i in 0 1 2

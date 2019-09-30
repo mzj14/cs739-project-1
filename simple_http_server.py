@@ -80,7 +80,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             dic = {}
 
             if records:
-                for k, v, t in kv_pairs:
+                for k, v, t in records:
                     dic[k] = (v, t)
 
             message = json.dumps(dic)
@@ -129,8 +129,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 c.execute('''UPDATE KVSTORE SET TIMESTAMP = %s, VALUE = %s WHERE KEY = %s AND TIMESTAMP <= %s;''' % (t, v, k, t))
             else:
                 old_v = None
-                print("debug: INSERT INTO KVSTORE VALUES (%s, %s, %s);" % (k, v, t))
-                c.execute('''INSERT INTO KVSTORE VALUES (%s, %s, %s);''' % (k, v, t))
+                c.execute('''INSERT INTO KVSTORE VALUES (?,?,?);''' , (k, v, t))
             conn.commit()
 
             # launch http request to sync data for other servers
@@ -180,7 +179,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 c.execute('''UPDATE KVSTORE SET TIMESTAMP = %s, VALUE = %s WHERE KEY = %s AND TIMESTAMP <= %s;''' % (t, v, k, t))
             else:
                 old_v = None
-                c.execute('''INSERT INTO KVSTORE VALUES (%s, %s, %s);''' % (k, v, t))
+                c.execute('''INSERT INTO KVSTORE VALUES (?,?,?);''', (k, v, t))
             conn.commit()
 
             message = json.dumps({})
@@ -198,12 +197,13 @@ def recover_db():
     conn = sqlite3.connect(db_name)
     c = conn.cursor()
     c.execute(''' SELECT MAX(TIMESTAMP) FROM KVSTORE INDEXED BY idx_timestamp; ''')
-    return_val = c.fetchone()
+    return_val = c.fetchone()[0]
     conn.commit()
     if return_val:
-        latest_t = return_val[0]
+        latest_t = return_val
     else:
         latest_t = "00000000000000000000"
+    print("latest t: {}".format(latest_t))
     for port in server_ports:
         if port != server_port:
             try:
@@ -231,17 +231,17 @@ def recover_db():
                         #     db1.put(k.encode(), v.encode())
 
 
-                    # put v into k if old_t < t
-                    conn = sqlite3.connect(db_name)
-                    c = conn.cursor()
-                    # grab old value
-                    c.execute(''' SELECT VALUE FROM KVSTORE INDEXED BY idx_key WHERE KEY = %s; ''' % k)
-                    return_val = c.fetchone()
-                    if return_val:
-                        c.execute('''UPDATE KVSTORE SET TIMESTAMP = %s, VALUE = %s WHERE KEY = %s AND TIMESTAMP <= %s;''' % (t, v, k, t))
-                    else:
-                        c.execute('''INSERT INTO KVSTORE VALUES (%s, %s, %s);''' % (k, v, t))
-                    conn.commit()
+                        # put v into k if old_t < t
+                        conn = sqlite3.connect(db_name)
+                        c = conn.cursor()
+                        # grab old value
+                        c.execute(''' SELECT VALUE FROM KVSTORE INDEXED BY idx_key WHERE KEY = %s; ''' % k)
+                        return_val = c.fetchone()
+                        if return_val:
+                            c.execute('''UPDATE KVSTORE SET TIMESTAMP = %s, VALUE = %s WHERE KEY = %s AND TIMESTAMP <= %s;''' % (t, v, k, t))
+                        else:
+                            c.execute('''INSERT INTO KVSTORE VALUES (%s, %s, %s);''' % (k, v, t))
+                        conn.commit()
 
                     # done with the recovery
                     break
