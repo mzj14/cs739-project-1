@@ -69,15 +69,15 @@ class RequestHandler(BaseHTTPRequestHandler):
             # grab all the k, v pairs with timestamp >= t
             c = conn.cursor()
             # grab old value
-            c.execute('''SELECT KEY, VALUE FROM KVSTORE WHERE TIMESTAMP >= %s''' % t)
-            kv_pairs = c.fetchall()
+            c.execute('''SELECT KEY, VALUE, TIMESTAMP FROM KVSTORE WHERE TIMESTAMP >= %s''' % t)
+            records = c.fetchall()
             conn.commit()
 
             dic = {}
 
-            if kv_pairs:
-                for k, v in kv_pairs:
-                    dic[k] = v
+            if records:
+                for k, v, t in kv_pairs:
+                    dic[k] = (v, t)
 
             message = json.dumps(dic)
             self.send_response(200)
@@ -97,7 +97,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             # print("post key is = ", data['k'])
             # print("post value is = ", data['v'])
             print("receive write request")
-            t = str(datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
+            t = str(datetime.datetime.now().strftime('%Y%m%d%H%M%S%f'))
             k, v = data['k'], data['v']
 
             # old_t = db3.get(k.encode())
@@ -138,7 +138,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                         print("Sync Timeout: process %s:%s dead!" % (server_ip, port))
 
             print("set write json message")
-            s = {"is_key_in": "yes", "old_value": old_v.decode()} if old_v else {"is_key_in": "no", "old_value": "None"}
+            s = {"is_key_in": "yes", "old_value": old_v} if old_v else {"is_key_in": "no", "old_value": "None"}
 
             message = json.dumps(s)
             print("message = ", message)
@@ -191,10 +191,15 @@ def recover_db():
     print("start db recover process...")
     # start the recover process
     # get the latest timestamp in db
-    try:
-        latest_t = next(db2.iterator(reverse=True))[0].split("[")[0]
-    except:
-        latest_t = "0000-00-00 00:00:00.000000"
+
+    c = conn.cursor()
+    c.execute(''' SELECT MAX(TIMESTAMP) FROM KVSTORE INDEXED BY idx_timestamp; ''')
+    return_val = c.fetchone()
+    c.commit()
+    if return_val:
+        latest_t = return_val[0]
+    else:
+        latest_t = "00000000000000000000"
     for port in server_ports:
         if port != server_port:
             try:
@@ -204,10 +209,8 @@ def recover_db():
             else:
                 if r.status_code == 200:
                     # write to db
-                    for tk, v in r.json().items():
-                        t, k = tk.split("[")[:2]
+                    for k, (v,t) in r.json().items():
                         print(t, k, v)
-
 
                         # old_t = db3.get(k.encode())
                         # if old_t and old_t.decode() < t:
