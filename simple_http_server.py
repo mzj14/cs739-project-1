@@ -126,10 +126,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             return_val = c.fetchone()
             if return_val:
                 old_v = return_val[0]
-                c.execute('''UPDATE KVSTORE SET TIMESTAMP = %s, VALUE = %s WHERE KEY = %s AND TIMESTAMP <= %s;''' % (t, v, k, t))
+                conn.execute('''UPDATE KVSTORE SET TIMESTAMP = %s, VALUE = %s WHERE KEY = %s AND TIMESTAMP <= %s;''' % (t, v, k, t))
             else:
                 old_v = None
-                c.execute('''INSERT INTO KVSTORE VALUES (?,?,?);''' , (k, v, t))
+                conn.execute('''INSERT INTO KVSTORE VALUES (?,?,?);''' , (k, v, t))
             conn.commit()
 
             # launch http request to sync data for other servers
@@ -176,10 +176,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             return_val = c.fetchone()
             if return_val:
                 old_v = return_val[0]
-                c.execute('''UPDATE KVSTORE SET TIMESTAMP = %s, VALUE = %s WHERE KEY = %s AND TIMESTAMP <= %s;''' % (t, v, k, t))
+                conn.execute('''UPDATE KVSTORE SET TIMESTAMP = %s, VALUE = %s WHERE KEY = %s AND TIMESTAMP <= %s;''' % (t, v, k, t))
             else:
                 old_v = None
-                c.execute('''INSERT INTO KVSTORE VALUES (?,?,?);''', (k, v, t))
+                conn.execute('''INSERT INTO KVSTORE VALUES (?,?,?);''', (k, v, t))
             conn.commit()
 
             message = json.dumps({})
@@ -238,9 +238,9 @@ def recover_db():
                         c.execute(''' SELECT VALUE FROM KVSTORE INDEXED BY idx_key WHERE KEY = %s; ''' % k)
                         return_val = c.fetchone()
                         if return_val:
-                            c.execute('''UPDATE KVSTORE SET TIMESTAMP = %s, VALUE = %s WHERE KEY = %s AND TIMESTAMP <= %s;''' % (t, v, k, t))
+                            conn.execute('''UPDATE KVSTORE SET TIMESTAMP = %s, VALUE = %s WHERE KEY = %s AND TIMESTAMP <= %s;''' % (t, v, k, t))
                         else:
-                            c.execute('''INSERT INTO KVSTORE VALUES (%s, %s, %s);''' % (k, v, t))
+                            conn.execute('''INSERT INTO KVSTORE VALUES (?,?,?);''', (k, v, t))
                         conn.commit()
 
                     # done with the recovery
