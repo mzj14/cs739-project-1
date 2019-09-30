@@ -1,4 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from socketserver import ThreadingMixIn
 from urllib.parse import urlparse
 import json
 import sys
@@ -16,7 +17,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
     def do_GET(self):
-
+        print(threading.currentThread().getName())
         parsed_path = urlparse(self.path)
         # handle read request
         if parsed_path.path == "/kv/":
@@ -91,6 +92,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
 
     def do_POST(self):
+        print(threading.currentThread().getName())
         content_len = int(self.headers.get('Content-Length'))
         post_body = self.rfile.read(content_len)
         data = json.loads(post_body.decode())
@@ -133,7 +135,6 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             # launch http request to sync data for other servers
             # even if a server crashes, we will still try to sync with it
-            print("finish db op")
             for port in server_ports:
                 if port != server_port:
                     try:
@@ -141,11 +142,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                     except (requests.ConnectionError, requests.Timeout):
                         print("Sync Timeout: process %s:%s dead!" % (server_ip, port))
 
-            print("set write json message")
             s = {"is_key_in": "yes", "old_value": old_v} if old_v else {"is_key_in": "no", "old_value": "None"}
 
             message = json.dumps(s)
-            print("message = ", message)
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.send_header("Content-Length", len(message))
@@ -213,7 +212,7 @@ def recover_db():
                 print("Sync Timeout: process %s:%s dead!" % (server_ip, port))
             else:
                 if r.status_code == 200:
-                    # write to db
+
                     for k, (v,t) in r.json().items():
                         print(t, k, v)
 
@@ -251,6 +250,8 @@ def recover_db():
     rec = True
     print("finish db recover process")
 
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
 
 if __name__ == '__main__':
     global server_port
@@ -279,6 +280,6 @@ if __name__ == '__main__':
     rec = False
     # lauch a thread for data restore
     threading.Thread(target=recover_db).start()
-    server = HTTPServer((server_ip, int(server_port)), RequestHandler)
+    server = ThreadedHTTPServer((server_ip, int(server_port)), RequestHandler)
     print('Starting server at http://%s:%s' % (server_ip, server_port))
     server.serve_forever()

@@ -60,7 +60,8 @@ void increment_counter()
 int kv739_put(char * key, char * value, char * old_value)
 {
 
-    cout << "\n\n" << INFO << "try to put value " << value << " into key " << key << endl;
+    // cout << "\n\n" << INFO << "try to put value " << value << " into key " << key << endl;
+
     concurrency::streams::stringstreambuf buffer;
 
     // build request
@@ -69,14 +70,14 @@ int kv739_put(char * key, char * value, char * old_value)
     web::json::value json_return;
     json_post["k"] = web::json::value::string(key);
     json_post["v"] = web::json::value::string(value);
-    cout << DEBUG << json_post.serialize() << endl;
+    // cout << DEBUG << json_post.serialize() << endl;
 
     // retry server until success or examined all valid servers
     int fail = 1;
     int attempts = 0;
 
     while (fail) {
-        cout << DEBUG << "attempt " << attempts << ": try to connect server " << COUNTER << endl;
+        // cout << DEBUG << "attempt " << attempts << ": try to connect server " << COUNTER << endl;
         // TODO: return failure if tried all servers and no alive, may add timeuot as well?
         if (attempts > NUM_SERVER * 2) {
             return -1;
@@ -86,7 +87,7 @@ int kv739_put(char * key, char * value, char * old_value)
         try {
             json_return = client_ptr.request(methods::POST, builder.to_string(), json_post).get().extract_json().get();
             fail = 0;
-            cout << INFO << "connection sucess!" << endl;
+            // cout << INFO << "connection sucess!" << endl;
         } catch (const web::http::http_exception& e) {
             cout << WARN << "fail to connect server " << COUNTER << " : " << e.what() << std::endl;
         }
@@ -94,7 +95,7 @@ int kv739_put(char * key, char * value, char * old_value)
         attempts++;
     }
 
-    cout << DEBUG << json_return.serialize() << endl;
+    // cout << DEBUG << json_return.serialize() << endl;
 
     // check if key is in
     utility::string_t is_key_in = json_return.at("is_key_in").as_string();
@@ -104,10 +105,10 @@ int kv739_put(char * key, char * value, char * old_value)
         utility::string_t val = json_val.as_string();
         copy(val.begin(), val.end(), old_value);
         old_value[val.size()] = '\0';
-        cout << INFO << "return value = " << val << endl;
+        // cout << INFO << "return value = " << val << endl;
         return 0;
     } else {
-        cout << INFO << "no old value" << endl;
+        // cout << INFO << "no old value" << endl;
         return 1;
     }
     return -1;
@@ -116,21 +117,22 @@ int kv739_put(char * key, char * value, char * old_value)
 int kv739_get(char * key, char * value)
 {
 
-    cout << "\n\n" << INFO << "try to get value for key = " << key << endl;
+    // cout << "\n\n" << INFO << "try to get value for key = " << key << endl;
+
     concurrency::streams::stringstreambuf buffer;
     web::json::value json_return;
 
     // build request
     uri_builder builder(U("/kv/"));
     builder.append_query(U("k"), U(key));
-    cout << DEBUG << "query key: " << builder.to_string() << endl;
+    // cout << DEBUG << "query key: " << builder.to_string() << endl;
 
     // retry server until success or examined all valid servers
     int fail = 1;
     int attempts = 0;
 
     while (fail) {
-        cout << DEBUG << "attempt " << attempts << ": try to connect server " << COUNTER << endl;
+        // cout << DEBUG << "attempt " << attempts << ": try to connect server " << COUNTER << endl;
         // TODO: return failure if tried all servers and no alive, may add timeuot as well?
         if (attempts > NUM_SERVER * 2) {
             return -1;
@@ -141,7 +143,7 @@ int kv739_get(char * key, char * value)
             json_return = client_ptr.request(methods::GET,
             builder.to_string()).get().extract_json().get();
             fail = json_return.at("is_key_in").as_string() == "NA" ? 1 : 0;
-            cout << INFO << "connection sucess!" << endl;
+            // cout << INFO << "connection sucess!" << endl;
         } catch (const web::http::http_exception& e) {
             cout << WARN << "fail to connect server " << COUNTER << " : " << e.what() << std::endl;
         }
@@ -149,7 +151,7 @@ int kv739_get(char * key, char * value)
         attempts++;
     }
 
-    cout << DEBUG << json_return.serialize() << endl;
+    // cout << DEBUG << json_return.serialize() << endl;
 
     // check if key is in
     utility::string_t is_key_in = json_return.at("is_key_in").as_string();
@@ -160,10 +162,10 @@ int kv739_get(char * key, char * value)
         utility::string_t val = json_val.as_string();
         copy(val.begin(), val.end(), value);
         value[val.size()] = '\0';
-        cout << INFO << "return value = " << val << endl;
+        // cout << INFO << "return value = " << val << endl;
         return 0;
     } else {
-        cout << WARN << "key is not found" << endl;
+        // cout << WARN << "key is not found" << endl;
         return 1;
     }
 
