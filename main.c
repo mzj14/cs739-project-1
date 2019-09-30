@@ -2,12 +2,12 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "739kv.h"
 
-int main(int argc, char * argv[])
-{
-    char* server_list[3] = {argv[1], argv[2], argv[3]};
+int main(int argc, char * argv[]) {
+    char* server_list[4] = {argv[1], argv[2], argv[3], argv[4]};
     struct timespec start, end;
     long t0, t1, delta_read, delta_write;
     // const size_t length = sizeof(server_list)/sizeof(char*);
@@ -18,7 +18,7 @@ int main(int argc, char * argv[])
     //server_list[2] = argv[3];
     // server_list[3] = ;
     // printf("argc = %d\n", argc);
-    kv739_init(server_list, 3);
+    kv739_init(server_list, 4);
 
 
     /* measure the benchmark overhead */
