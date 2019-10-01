@@ -28,7 +28,7 @@ int main(int argc, char * argv[]) {
     pid_t process_id = getpid();
 
     /* init server */
-    kv739_init(argv + 3);
+    kv739_init(argv + 1);
 
     /* initialized work loads */
     /* initialize random seed */
