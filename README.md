@@ -19,6 +19,7 @@ You should have `ubuntu16.04+` and `python3.5+`.
 Please install:
 `pip3 install requests plyvel`
 `sudo apt-get install libcpprest-dev`
+`sudo apt-get install libboost-all-dev`
 
 ## Run a Server Instance
 ```
