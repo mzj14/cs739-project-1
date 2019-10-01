@@ -94,7 +94,7 @@ int kv739_put(char * key, char * value, char * old_value)
         web::http::client::http_client client_ptr(server_addrs[COUNTER]);
         try {
             json_return = client_ptr.request(methods::POST, builder.to_string(), json_post).get().extract_json().get();
-            fail = 0;
+            fail = json_return.at("is_key_in").as_string() == "NA" ? 1 : 0;
             // cout << INFO << "connection sucess!" << endl;
         } catch (const web::http::http_exception& e) {
             cout << WARN << "fail to connect server " << COUNTER << " : " << e.what() << std::endl;
