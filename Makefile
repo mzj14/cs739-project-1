@@ -25,4 +25,4 @@ lib739kv.so: 739kv.h 739kv.cpp
 	g++ $(CXXFLAGS) 739kv.cpp -fPIC -shared -o lib739kv.so $(CXXLINK)
 
 clean:
-	rm -f core *.o output
+	rm -f core *.o performance_test correctness_test

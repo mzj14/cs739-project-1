@@ -14,8 +14,11 @@ curl -d '{"k":"100", "v":"999"}' -H "Content-Type: application/json" -X POST htt
 curl -X GET http://{{server-ip}}:{{server-port}}/kv/?k=100
 ```
 
-## Prerequisites for Server
-You should have `python3.5+` and `pip3 install requests plyvel`
+## Prerequisites
+You should have `ubuntu16.04+` and `python3.5+`.
+Please install:
+`pip3 install requests plyvel`
+`sudo apt-get install libcpprest-dev`
 
 ## Run a Server Instance
 ```
