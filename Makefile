@@ -11,10 +11,14 @@ CXXFLAGS = -O2 -g -Wall -std=c++11
 
 all:
 	make lib739kv.so
-	make main.o
+	make performance_test
+	make correctness_test
 
-main.o: main.c
-	$(CXX) main.c -L. -l :lib739kv.so -o output
+performance_test: performance_test.c
+	$(CXX) performance_test.c -L. -l :lib739kv.so -o performance_test
+
+correctness_test: correctness_test.c
+	$(CXX) correctness_test.c -L. -l :lib739kv.so -o correctness_test
 
 lib739kv.so: 739kv.h 739kv.cpp
 	rm -f *.so
