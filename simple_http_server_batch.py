@@ -75,8 +75,15 @@ class RequestHandler(BaseHTTPRequestHandler):
         parsed_path = urlparse(self.path)
         # direct write request
         if parsed_path.path == "/kv/":
-            # print("post key is = ", data['k'])
-            # print("post value is = ", data['v'])
+            # the database is still under recover
+            if not rec:
+                message = json.dumps({"is_key_in": "NA"})
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header("Content-Length", len(message))
+                self.end_headers()
+                self.wfile.write(message.encode())
+                return
             print("receive write request")
             t = str(datetime.datetime.now())
             k, v = data['k'], data['v']
