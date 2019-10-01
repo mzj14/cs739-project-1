@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "739kv.h"
 
@@ -20,16 +21,26 @@
 
 #define SLEEP_INTERVAL 30 // in seconds
 
+char** server_list = NULL;
+
+void handle_signal(int sig) {
+    printf("Caught signal %d\n", sig);
+    kv739_shutdown();
+    kv739_init(server_list);
+}
+
 int main(int argc, char * argv[]) {
-    signal()
     struct timespec start, end;
     long t0, t1, delta_read, delta_write;
+
+    signal(SIG_PIPE, handle_signal);
 
     /* use process id to differentiate client */
     pid_t process_id = getpid();
 
     /* init server */
-    kv739_init(argv + 1);
+    server_list = argv + 1;
+    kv739_init(server_list);
 
     /* initialized work loads */
     /* initialize random seed */
